@@ -1,115 +1,118 @@
-import React, { FC, useState, useEffect, useRef } from "react";
+import React, { FC, useRef } from "react";
 import "./App.css";
+import DrawGrid from "./components/drawGrid";
 
 const App: FC = () => {
-  const [grid, updateGrid] = useState<any[]>([]);
-
+  const obstacles = useRef<number[]>([]);
   const squareWidth = useRef<number>(10);
   const squareHeight = useRef<number>(10);
-  const gridWrapper = useRef<HTMLDivElement | null>(null);
-  const gridWrapperWidth = useRef<number>(1300);
-  const gridWrapperHeight = useRef<number>(600);
+  const gridWrapperWidth = useRef<number>(1000);
+  const gridWrapperHeight = useRef<number>(500);
+  const numberOfSquares = useRef<number>(
+    (gridWrapperHeight.current * gridWrapperWidth.current) /
+      (squareHeight.current * squareWidth.current)
+  );
 
-  const start = useRef<boolean>(false);
-  const end = useRef<boolean>(false);
-  const started = useRef<boolean>(false);
-  const ended = useRef<boolean>(false);
+  const start_node = useRef<number>(0);
+  const end_node = useRef<number>(0);
 
-  const startNode = useRef<number>(0);
-  const endNode = useRef<number>(0);
-
-  const mounted = useRef<number>(0);
-
-  function drawGrid(areaOfWrapper: number) {
-    let gr = [];
-    let numberOfSquare: number =
-      areaOfWrapper / (squareHeight.current * squareWidth.current);
-    for (let i = 0; i < numberOfSquare; i++) {
-      gr.push(
-        <div
-          id={i.toString()}
-          className="sq"
-          style={{
-            backgroundColor: "#E5E5E5",
-            width: squareHeight.current,
-            height: squareHeight.current,
-            float: "left",
-          }}
-          draggable="true"
-          onDragEnter={highlightSquare}
-          onClick={handleStartEnd}
-        ></div>
-      );
-    }
-    updateGrid(gr);
+  // checks if the given index is valid
+  function inBounds(index: number): boolean {
+    return index >= 0 && index <= numberOfSquares.current;
   }
 
-  useEffect(() => {
-    document.addEventListener("keydown", function (event) {
-      if (!started.current) start.current = event.key === "s";
-      if (!ended.current) end.current = event.key === "e";
+  function getAdjacentNodes(index: number): number[] {
+    let nRow: number = gridWrapperWidth.current / squareWidth.current;
+    let adjList: number[] = [];
+    let top: number = inBounds(index - nRow) ? index - nRow : -1;
+    let bottom: number = inBounds(index + nRow) ? index + nRow : -1;
+
+    adjList.push(top);
+    adjList.push(bottom);
+    if ((index + 1) % nRow !== 0) adjList.push(index + 1); // right
+    if (index % nRow !== 0) adjList.push(index - 1); // left
+
+    return adjList;
+  }
+
+  // checks if there is a obstacle in the given index
+  function isObstacle(index: number): boolean {
+    let isObs: boolean = false;
+    obstacles.current.forEach((obstacle: number) => {
+      if (Number(obstacle) === index) isObs = true;
     });
-    console.log("useEffect");
-    if (mounted.current <= 1) {
-      if (
-        gridWrapper.current?.offsetHeight != null &&
-        gridWrapper.current?.offsetWidth != null
-      ) {
-        console.log("drawing grid");
-        drawGrid(
-          gridWrapper.current.offsetHeight * gridWrapper.current.offsetWidth
-        );
-      }
-    }
-    mounted.current++;
-  });
-
-  function highlightSquare(event: any) {
-    const id = event.target.id;
-    const target = document.getElementById(id);
-    if (target !== null) {
-      target.style.backgroundColor = "black";
-    }
+    return isObs;
   }
 
-  function handleStartEnd(event: any) {
-    const id = event.target.id;
-    const target = document.getElementById(id);
-    if (target !== null) {
-      if (start.current && !started.current) {
-        target.style.backgroundColor = "red";
-        started.current = true;
-        startNode.current = parseInt(id);
-      } else if (end.current && !ended.current) {
-        target.style.backgroundColor = "green";
-        ended.current = true;
-        endNode.current = parseInt(id);
-      }
-    }
-  }
+  // main function for Dijstra's shortest path
+  function Dijstra() {
+    console.log("obstacles : \n " + obstacles.current);
+    let prevNodes: Map<number, number> = new Map();
+    let adjList: number[] = [];
+    let queue: number[] = [];
+    let visited: boolean[] = [];
 
-  function clearGrid() {
-    mounted.current = 0;
-    updateGrid([]);
-    started.current = false;
-    ended.current = false;
+    for (let i = 0; i < numberOfSquares.current; i++) visited.push(false);
+
+    queue.push(start_node.current);
+    let running: boolean = true;
+
+    while (running) {
+      let currentIndex: number = queue[0];
+      if (currentIndex === end_node.current) running = false;
+      // getting the adjacent elements of current node
+      adjList = getAdjacentNodes(currentIndex);
+      console.log("adjacent list of ", currentIndex + ": ");
+      // eslint-disable-next-line no-loop-func
+      adjList.forEach((adjIndex: number) => {
+        if (adjIndex !== -1 && !visited[adjIndex] && !isObstacle(adjIndex)) {
+          console.log(adjIndex);
+          let element = document.getElementById(adjIndex.toString());
+          let notStartEnd: boolean =
+            adjIndex !== start_node.current && adjIndex !== end_node.current;
+          if (element !== null && notStartEnd)
+            element.style.backgroundColor = "blue";
+          queue.push(adjIndex);
+          visited[adjIndex] = true;
+          prevNodes.set(adjIndex, currentIndex);
+        }
+      });
+      visited[currentIndex] = true;
+      queue.shift();
+    }
+
+    // back tracking from the end_node
+    let i: number | undefined = prevNodes.get(end_node.current);
+    while (i !== start_node.current && i !== undefined) {
+      let e = document.getElementById(i.toString());
+      if (e !== null) e.style.backgroundColor = "yellow";
+      i = prevNodes.get(i);
+    }
   }
 
   return (
     <div className="App">
-      <button onClick={clearGrid}>clear</button>
-      <div
-        className="gridWrapper"
-        ref={gridWrapper}
-        style={{
-          marginTop: "1%",
-          marginLeft: "2%",
-          height: gridWrapperHeight.current,
-          width: gridWrapperWidth.current,
+      <button onClick={Dijstra} className="startBtn">
+        start
+      </button>
+      <DrawGrid
+        squareHeight={squareHeight.current}
+        squareWidth={squareWidth.current}
+        gridWrapperHeight={gridWrapperHeight.current}
+        gridWrapperWidth={gridWrapperWidth.current}
+        callback={({ startNode, endNode, obstacle }: any) => {
+          // getting the start and the end index
+          if (startNode !== -1) {
+            start_node.current = startNode;
+          }
+          if (endNode !== -1) {
+            end_node.current = endNode;
+          }
+          if (obstacle !== undefined) {
+            obstacles.current.push(obstacle);
+          }
         }}
-      >
-        {grid}
-      </div>
+      />
     </div>
   );
 };
