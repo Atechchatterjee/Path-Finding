@@ -9,13 +9,16 @@ interface q {
 
 const App: FC = () => {
   const obstacles = useRef<number[]>([]);
-  const squareWidth = useRef<number>(10);
-  const squareHeight = useRef<number>(10);
-  const gridWrapperWidth = useRef<number>(1000);
-  const gridWrapperHeight = useRef<number>(500);
+  const squareWidth = useRef<number>(18);
+  const squareHeight = useRef<number>(18);
+  const gridWrapperWidth = useRef<number>(1200);
+  const gridWrapperHeight = useRef<number>(580);
+  const borderWidth = useRef<number>(2);
+  const borderHeight = useRef<number>(2);
   const numberOfSquares = useRef<number>(
     (gridWrapperHeight.current * gridWrapperWidth.current) /
-      (squareHeight.current * squareWidth.current)
+      ((squareHeight.current + borderHeight.current) *
+        (squareWidth.current + borderWidth.current))
   );
 
   const start_node = useRef<number>(0);
@@ -28,7 +31,8 @@ const App: FC = () => {
 
   // given a vertex returns the top, left, right and bottom vertices
   let getAdjacentNodes = (index: number): number[] => {
-    let nRow: number = gridWrapperWidth.current / squareWidth.current;
+    let nRow: number =
+      gridWrapperWidth.current / (squareWidth.current + borderWidth.current);
     let adjList: number[] = [];
     let top: number = inBounds(index - nRow) ? index - nRow : -1;
     let bottom: number = inBounds(index + nRow) ? index + nRow : -1;
@@ -126,7 +130,7 @@ const App: FC = () => {
       let i: number | undefined = prevNodes.get(end_node.current);
       while (i !== start_node.current && i !== undefined) {
         let e = document.getElementById(i.toString());
-        if (e !== null) e.style.backgroundColor = "yellow";
+        if (e !== null) e.style.backgroundColor = "#F4D06E";
         i = prevNodes.get(i);
       }
     };
@@ -144,6 +148,8 @@ const App: FC = () => {
         squareWidth={squareWidth.current}
         gridWrapperHeight={gridWrapperHeight.current}
         gridWrapperWidth={gridWrapperWidth.current}
+        borderWidth={borderWidth.current}
+        borderHeight={borderHeight.current}
         callback={({ startNode, endNode, obstacle }: any) => {
           // getting the start and the end index
           if (startNode !== -1) {

@@ -5,6 +5,8 @@ interface Props {
   squareHeight: number;
   gridWrapperWidth: number;
   gridWrapperHeight: number;
+  borderWidth: number;
+  borderHeight: number;
   callback?: Function;
 }
 
@@ -13,6 +15,8 @@ const DrawGrid: FC<Props> = ({
   squareHeight,
   gridWrapperHeight,
   gridWrapperWidth,
+  borderWidth,
+  borderHeight,
   callback,
 }) => {
   const [grid, updateGrid] = useState<any[]>([]);
@@ -21,6 +25,9 @@ const DrawGrid: FC<Props> = ({
 
   const start = useRef<boolean>(false);
   const end = useRef<boolean>(false);
+  const startNodeColor = useRef<string>("#EF5B5B");
+  const endNodeColor = useRef<string>("#43BA48");
+  const wallColor = useRef<string>("#E8E8E8");
   const started = useRef<boolean>(false);
   const ended = useRef<boolean>(false);
 
@@ -29,17 +36,22 @@ const DrawGrid: FC<Props> = ({
   // main function to draw the grid
   function drawGrid(areaOfWrapper: number) {
     let gr = [];
-    let numberOfSquare: number = areaOfWrapper / (squareHeight * squareWidth);
+    let numberOfSquare: number =
+      areaOfWrapper /
+      ((squareHeight + borderHeight) * (squareWidth + borderWidth));
     for (let i = 0; i < numberOfSquare; i++) {
       gr.push(
         <div
           id={i.toString()}
           className="sq"
           style={{
-            backgroundColor: "#E5E5E5",
+            backgroundColor: "#121415",
             width: squareHeight,
             height: squareHeight,
             float: "left",
+            borderStyle: "dotted",
+            borderColor: "blue",
+            borderWidth: borderWidth / 2,
           }}
           draggable="true"
           onDragEnter={highlightSquare}
@@ -76,7 +88,8 @@ const DrawGrid: FC<Props> = ({
     const target = document.getElementById(id);
     if (target !== null) {
       obs.push(parseInt(id));
-      target.style.backgroundColor = "black";
+      target.style.backgroundColor = wallColor.current;
+      target.style.borderColor = "black";
     }
     if (callback !== undefined)
       callback({ startNode: -1, endNode: -1, obstacle: obs });
@@ -88,12 +101,14 @@ const DrawGrid: FC<Props> = ({
     const target = document.getElementById(id);
     if (target !== null) {
       if (start.current && !started.current) {
-        target.style.backgroundColor = "red";
+        target.style.backgroundColor = startNodeColor.current;
+        target.style.borderColor = startNodeColor.current;
         started.current = true;
         if (callback !== undefined)
           callback({ startNode: parseInt(id), endNode: -1, obs: [] });
       } else if (end.current && !ended.current) {
-        target.style.backgroundColor = "green";
+        target.style.backgroundColor = endNodeColor.current;
+        target.style.borderColor = endNodeColor.current;
         ended.current = true;
         if (callback !== undefined)
           callback({ endNode: parseInt(id), startNode: -1, obs: [] });
