@@ -20,28 +20,39 @@ const App: FC = () => {
       ((squareHeight.current + borderHeight.current) *
         (squareWidth.current + borderWidth.current))
   );
+  const finalPathColor = useRef<string>("#F8C93B");
 
   const start_node = useRef<number>(0);
   const end_node = useRef<number>(0);
 
   // checks if the given index is valid
   let inBounds = (index: number): boolean => {
-    return index >= 0 && index <= numberOfSquares.current;
+    return index >= 0 && index < numberOfSquares.current;
   };
 
   // given a vertex returns the top, left, right and bottom vertices
   let getAdjacentNodes = (index: number): number[] => {
     let nRow: number =
       gridWrapperWidth.current / (squareWidth.current + borderWidth.current);
+
     let adjList: number[] = [];
     let top: number = inBounds(index - nRow) ? index - nRow : -1;
     let bottom: number = inBounds(index + nRow) ? index + nRow : -1;
 
     adjList.push(top);
     adjList.push(bottom);
-    if ((index + 1) % nRow !== 0) adjList.push(index + 1); // right
-    if (index % nRow !== 0) adjList.push(index - 1); // left
-
+    if (inBounds(index)) {
+      if ((index + 1) % nRow !== 0) {
+        adjList.push(index + 1); // right
+        if (bottom + 1 > index) adjList.push(bottom + 1);
+        if (top + 1 < index && index >= nRow) adjList.push(top + 1);
+      }
+      if (index % nRow !== 0) {
+        adjList.push(index - 1); // left
+        if (bottom - 1 > index) adjList.push(bottom - 1);
+        if (top - 1 < index && index >= nRow) adjList.push(top - 1);
+      }
+    }
     return adjList;
   };
 
@@ -75,64 +86,71 @@ const App: FC = () => {
     return queue;
   };
 
-  // gets the distance from the start node
-  let getDistance = (index: number): number => {
-    return Math.abs(start_node.current - index);
-  };
-
   // main function for Dijstra's shortest path
   function Dijstra() {
     console.log("obstacles : \n " + obstacles.current);
     let prevNodes: Map<number, number> = new Map();
     let adjList: number[] = [];
-    let queue: number[] = [];
+    let queue: q[] = [];
     let visited: boolean[] = [];
 
+    // initialising all the nodes to have infinite distance
+    for (let i = 0; i < numberOfSquares.current; i++)
+      if (i !== start_node.current)
+        queue = insert(queue, { index: i, distance: Infinity });
+    queue = insert(queue, { index: start_node.current, distance: 0 });
+
     for (let i = 0; i < numberOfSquares.current; i++) visited.push(false);
-    queue.push(start_node.current);
+    // queue.push(start_node.current);
+
+    let backTrack = () => {
+      // back tracking from the end_node
+      let i: number | undefined = prevNodes.get(end_node.current);
+      while (i !== start_node.current && i !== undefined) {
+        let e = document.getElementById(i.toString());
+        if (e !== null) e.style.backgroundColor = finalPathColor.current;
+        i = prevNodes.get(i);
+      }
+    };
 
     let main = () => {
-      let currentIndex: number = queue[0];
+      let currentIndex: number = queue[0].index;
+      let currentDistance: number = queue[0].distance;
       if (currentIndex === end_node.current) {
         backTrack();
         return;
       }
+      if (currentIndex === undefined) {
+        return;
+      }
       // getting the adjacent elements of current node
       adjList = getAdjacentNodes(currentIndex);
-      console.log("adjacent list of ", currentIndex + ": ");
       let element = document.getElementById(currentIndex.toString());
       if (element !== null && currentIndex !== start_node.current)
         element.style.backgroundColor = "cyan";
       // eslint-disable-next-line no-loop-func
       adjList.forEach((adjIndex: number) => {
         if (adjIndex !== -1 && !visited[adjIndex] && !isObstacle(adjIndex)) {
-          console.log(adjIndex);
           let element = document.getElementById(adjIndex.toString());
           let notStartEnd: boolean =
             adjIndex !== start_node.current && adjIndex !== end_node.current;
           if (element !== null && notStartEnd)
             element.style.backgroundColor = "blue";
-          queue.push(adjIndex);
+          queue = insert(queue, {
+            index: adjIndex,
+            distance: currentDistance + 1,
+          });
           visited[adjIndex] = true;
           prevNodes.set(adjIndex, currentIndex);
         }
       });
+
       visited[currentIndex] = true;
       queue.shift();
+
       setInterval(() => {
         main();
       }, 500);
-    };
-
-    let backTrack = () => {
-      console.log("PrevNodes : " + prevNodes);
-      // back tracking from the end_node
-      let i: number | undefined = prevNodes.get(end_node.current);
-      while (i !== start_node.current && i !== undefined) {
-        let e = document.getElementById(i.toString());
-        if (e !== null) e.style.backgroundColor = "#F4D06E";
-        i = prevNodes.get(i);
-      }
     };
 
     main();
