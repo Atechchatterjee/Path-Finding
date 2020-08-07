@@ -1,5 +1,6 @@
 import React, { FC, useRef } from "react";
 import "./App.css";
+import Dijstra from "./components/Dijstra";
 import DrawGrid from "./components/drawGrid";
 import NavBar from "./components/NavBar";
 
@@ -14,14 +15,13 @@ const App: FC = () => {
   const squareHeight = useRef<number>(20);
   const gridWrapperWidth = useRef<number>(1200);
   const gridWrapperHeight = useRef<number>(540);
-  const borderWidth = useRef<number>(0.1);
-  const borderHeight = useRef<number>(0.1);
+  const borderWidth = useRef<number>(0.05);
+  const borderHeight = useRef<number>(0.05);
   const numberOfSquares = useRef<number>(
     (gridWrapperHeight.current * gridWrapperWidth.current) /
       (squareHeight.current * squareWidth.current)
   );
   const nRow = useRef<number>(gridWrapperWidth.current / squareWidth.current);
-  const gridWrapper = useRef<HTMLDivElement | null>(null);
 
   const finalPathColor = useRef<string>("#F8C93B");
   const wallColor = useRef<string>("#C4C4C4");
@@ -130,106 +130,26 @@ const App: FC = () => {
     return queue;
   };
 
-  // main function for Dijstra's shortest path
-  function Dijstra() {
-    if (start_node.current === -1 || end_node.current === -1) {
-      alert("Not specified start or end");
-      return;
-    }
-    let prevNodes: Map<number, number> = new Map();
-    let adjList: number[] = [];
-    let queue: q[] = [];
-    let visited: boolean[] = [];
-
-    queue = insert(queue, { index: start_node.current, distance: 0 });
-
-    for (let i = 0; i < numberOfSquares.current; i++) visited.push(false);
-
-    // back-tracking from the end node
-    let backTrack = (bt: boolean, i: number | undefined): void => {
-      if (!bt) return;
-      if (i) {
-        let element = document.getElementById(i.toString());
-        if (element) {
-          element.style.backgroundColor = finalPathColor.current;
-        }
-        i = prevNodes.get(i);
-      }
-      return backTrack(i !== start_node.current, i);
-    };
-
-    let main = () => {
-      if (queue[0] === undefined) {
-        return;
-      }
-
-      let currentIndex: number = queue[0].index;
-      let currentDistance: number = queue[0].distance;
-
-      console.log("current index = " + currentIndex);
-
-      if (currentIndex === end_node.current) {
-        backTrack(true, prevNodes.get(end_node.current));
-        return;
-      }
-
-      // getting the adjacent elements of current node
-      adjList = getAdjacentNodes(currentIndex);
-
-      if (currentIndex === undefined) return;
-
-      let element = document.getElementById(currentIndex.toString());
-      if (element !== null && currentIndex !== start_node.current) {
-        element.style.backgroundColor = "#26AEC9";
-      }
-
-      for (let i = 0; i < adjList.length; i++) {
-        let adjIndex = adjList[i];
-        if (adjIndex !== -1 && !visited[adjIndex] && !isObstacle(adjIndex)) {
-          let element = document.getElementById(adjIndex.toString());
-          let notStartEnd: boolean =
-            adjIndex !== start_node.current && adjIndex !== end_node.current;
-          if (element !== null && notStartEnd) {
-            element.style.backgroundColor = "blue";
-          }
-          queue = insert(queue, {
-            index: adjIndex,
-            distance: currentDistance + 1,
-          });
-          visited[adjIndex] = true;
-          prevNodes.set(adjIndex, currentIndex);
-        }
-      }
-
-      visited[currentIndex] = true;
-      queue.shift();
-
-      setInterval(main, 500);
-    };
-
-    main();
-  }
-
   let clearGrid = () => {
-    if (gridWrapper.current !== null) {
-      let numberOfSquare: number =
-        (gridWrapper.current.offsetHeight * gridWrapper.current.offsetWidth) /
-        (squareHeight.current * squareWidth.current);
-      for (let i = 0; i < numberOfSquare; i++) {
-        let eachSquare = document.getElementById(i.toString());
-        if (eachSquare !== null) {
-          eachSquare.style.backgroundColor = gridColor.current;
-          eachSquare.style.borderColor = "blue";
-        }
-      }
-    }
+    let gridWrapper = document.querySelector("gridWrapper");
+    if (gridWrapper !== null) gridWrapper.parentNode?.removeChild(gridWrapper);
   };
 
   return (
     <div className="App">
       <NavBar
         header="Dijstra's shortest Path"
-        startCb={() => Dijstra()}
+        startCb={() =>
+          Dijstra({
+            start_node: start_node.current,
+            end_node: end_node.current,
+            numberOfSquares: numberOfSquares.current,
+            finalPathColor: finalPathColor.current,
+            getAdjacentNodes: getAdjacentNodes,
+            isObstacle: isObstacle,
+            insert: insert,
+          })
+        }
         randomCb={() => genRandomObstacle()}
         clearCb={() => clearGrid()}
       ></NavBar>
