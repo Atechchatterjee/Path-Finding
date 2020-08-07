@@ -25,13 +25,18 @@ const DrawGrid: FC<Props> = ({
 
   const start = useRef<boolean>(false);
   const end = useRef<boolean>(false);
-  const startNodeColor = useRef<string>("#EF5B5B");
-  const endNodeColor = useRef<string>("#43BA48");
-  const wallColor = useRef<string>("#E8E8E8");
   const started = useRef<boolean>(false);
   const ended = useRef<boolean>(false);
 
+  const start_node = useRef<number>(-1);
+  const end_node = useRef<number>(-1);
+
   const mounted = useRef<number>(0);
+
+  const startNodeColor = useRef<string>("#EF5B5B");
+  const endNodeColor = useRef<string>("#43BA48");
+  const wallColor = useRef<string>("#C4C4C4");
+  const gridColor = useRef<string>("#121415");
 
   // main function to draw the grid
   function drawGrid(areaOfWrapper: number) {
@@ -45,7 +50,7 @@ const DrawGrid: FC<Props> = ({
           id={i.toString()}
           className="sq"
           style={{
-            backgroundColor: "#121415",
+            backgroundColor: gridColor.current,
             width: squareHeight,
             height: squareHeight,
             float: "left",
@@ -87,12 +92,20 @@ const DrawGrid: FC<Props> = ({
     const obs: number[] = [];
     const target = document.getElementById(id);
     if (target !== null) {
-      obs.push(parseInt(id));
-      target.style.backgroundColor = wallColor.current;
-      target.style.borderColor = "black";
+      if (parseInt(id) === start_node.current) {
+        if (target.style.backgroundColor === startNodeColor.current) {
+          target.style.backgroundColor = gridColor.current;
+        } else {
+          target.style.backgroundColor = startNodeColor.current;
+        }
+      } else {
+        obs.push(parseInt(id));
+        target.style.backgroundColor = wallColor.current;
+        target.style.borderColor = gridColor.current;
+        if (callback !== undefined)
+          callback({ startNode: -1, endNode: -1, obstacle: obs });
+      }
     }
-    if (callback !== undefined)
-      callback({ startNode: -1, endNode: -1, obstacle: obs });
   }
 
   // marks the start and the end node
@@ -104,23 +117,38 @@ const DrawGrid: FC<Props> = ({
         target.style.backgroundColor = startNodeColor.current;
         target.style.borderColor = startNodeColor.current;
         started.current = true;
+        start_node.current = parseInt(id);
         if (callback !== undefined)
           callback({ startNode: parseInt(id), endNode: -1, obs: [] });
       } else if (end.current && !ended.current) {
         target.style.backgroundColor = endNodeColor.current;
         target.style.borderColor = endNodeColor.current;
         ended.current = true;
+        end_node.current = parseInt(id);
         if (callback !== undefined)
           callback({ endNode: parseInt(id), startNode: -1, obs: [] });
+      } else {
+        target.style.backgroundColor = wallColor.current;
+        target.style.borderColor = gridColor.current;
+        if (callback !== undefined)
+          callback({ startNode: -1, endNode: -1, obstacle: [id] });
       }
     }
   }
 
   function clearGrid() {
-    mounted.current = 0;
-    updateGrid([]);
-    started.current = false;
-    ended.current = false;
+    if (gridWrapper.current !== null) {
+      let numberOfSquare: number =
+        (gridWrapper.current.offsetHeight * gridWrapper.current.offsetWidth) /
+        ((squareHeight + borderHeight) * (squareWidth + borderWidth));
+      for (let i = 0; i < numberOfSquare; i++) {
+        let eachSquare = document.getElementById(i.toString());
+        if (eachSquare !== null) {
+          eachSquare.style.backgroundColor = gridColor.current;
+          eachSquare.style.borderColor = "blue";
+        }
+      }
+    }
   }
 
   return (
