@@ -1,6 +1,7 @@
 import React, { FC, useRef } from "react";
 import "./App.css";
 import DrawGrid from "./components/drawGrid";
+import NavBar from "./components/NavBar";
 
 interface q {
   index: number;
@@ -9,23 +10,22 @@ interface q {
 
 const App: FC = () => {
   const obstacles = useRef<number[]>([]);
-  const squareWidth = useRef<number>(18);
-  const squareHeight = useRef<number>(18);
+  const squareWidth = useRef<number>(20);
+  const squareHeight = useRef<number>(20);
   const gridWrapperWidth = useRef<number>(1200);
-  const gridWrapperHeight = useRef<number>(580);
-  const borderWidth = useRef<number>(2);
-  const borderHeight = useRef<number>(2);
+  const gridWrapperHeight = useRef<number>(540);
+  const borderWidth = useRef<number>(0.1);
+  const borderHeight = useRef<number>(0.1);
   const numberOfSquares = useRef<number>(
     (gridWrapperHeight.current * gridWrapperWidth.current) /
-      ((squareHeight.current + borderHeight.current) *
-        (squareWidth.current + borderWidth.current))
+      (squareHeight.current * squareWidth.current)
   );
-  const nRow = useRef<number>(
-    gridWrapperWidth.current / (squareWidth.current + borderWidth.current)
-  );
+  const nRow = useRef<number>(gridWrapperWidth.current / squareWidth.current);
+  const gridWrapper = useRef<HTMLDivElement | null>(null);
 
   const finalPathColor = useRef<string>("#F8C93B");
   const wallColor = useRef<string>("#C4C4C4");
+  const gridColor = useRef<string>("#121415");
 
   const start_node = useRef<number>(-1);
   const end_node = useRef<number>(-1);
@@ -35,6 +35,7 @@ const App: FC = () => {
     return index >= 0 && index < numberOfSquares.current;
   };
 
+  // generates random obstacles in the grid
   let genRandomObstacle = () => {
     let randomObstacles = (
       a: number = Math.floor(Math.random() * 1000 + 100)
@@ -51,32 +52,52 @@ const App: FC = () => {
     randomObstacles();
   };
 
-  // given a vertex returns the top, left, right and bottom vertices
-  let getAdjacentNodes = (index: number): number[] => {
-    let adjList: number[] = [];
+  // returns a specific neighbouring element
+  let getElements = (index: number, type: string): number => {
     let top: number = inBounds(index - nRow.current)
       ? index - nRow.current
       : -1;
     let bottom: number = inBounds(index + nRow.current)
       ? index + nRow.current
       : -1;
-
-    adjList.push(top);
-    adjList.push(bottom);
+    if (type === "top") return top;
+    if (type === "bottom") return bottom;
 
     if (inBounds(index)) {
       if ((index + 1) % nRow.current !== 0) {
-        adjList.push(index + 1); // right
-        if (bottom + 1 > index) adjList.push(bottom + 1); // bottom right
-        if (top + 1 < index && index >= nRow.current) adjList.push(top + 1); // top right
+        if (type === "right") return index + 1; // right
+        if (type === "bottom-right") {
+          if (bottom + 1 > index) return bottom + 1; // bottom right
+        }
+        if (type === "top-right") {
+          if (top + 1 < index && index >= nRow.current) return top + 1; // top right
+        }
       }
       if (index % nRow.current !== 0) {
-        adjList.push(index - 1); // left
-        if (bottom - 1 > index) adjList.push(bottom - 1); // bottom left
-        if (top - 1 < index && index >= nRow.current) adjList.push(top - 1); // top left
+        if (type === "left") return index - 1; // right
+        if (type === "bottom-left") {
+          if (bottom - 1 > index) return bottom - 1; // bottom left
+        }
+        if (type === "top-left") {
+          if (top - 1 < index && index >= nRow.current) return top - 1; // top left
+        }
       }
     }
-    return adjList;
+    return -1;
+  };
+
+  // given a vertex returns all the adjacent vertices
+  let getAdjacentNodes = (index: number): number[] => {
+    return [
+      getElements(index, "top"),
+      getElements(index, "bottom"),
+      getElements(index, "right"),
+      getElements(index, "bottom-right"),
+      getElements(index, "top-right"),
+      getElements(index, "left"),
+      getElements(index, "bottom-left"),
+      getElements(index, "top-left"),
+    ];
   };
 
   // checks if there is a obstacle in the given index
@@ -111,6 +132,10 @@ const App: FC = () => {
 
   // main function for Dijstra's shortest path
   function Dijstra() {
+    if (start_node.current === -1 || end_node.current === -1) {
+      alert("Not specified start or end");
+      return;
+    }
     let prevNodes: Map<number, number> = new Map();
     let adjList: number[] = [];
     let queue: q[] = [];
@@ -158,13 +183,9 @@ const App: FC = () => {
         element.style.backgroundColor = "#26AEC9";
       }
 
-      let count = 0;
-
       for (let i = 0; i < adjList.length; i++) {
         let adjIndex = adjList[i];
         if (adjIndex !== -1 && !visited[adjIndex] && !isObstacle(adjIndex)) {
-          count++;
-          console.log("adjacent element of " + currentIndex + ": " + adjIndex);
           let element = document.getElementById(adjIndex.toString());
           let notStartEnd: boolean =
             adjIndex !== start_node.current && adjIndex !== end_node.current;
@@ -179,7 +200,6 @@ const App: FC = () => {
           prevNodes.set(adjIndex, currentIndex);
         }
       }
-      console.log("count " + count);
 
       visited[currentIndex] = true;
       queue.shift();
@@ -190,14 +210,29 @@ const App: FC = () => {
     main();
   }
 
+  let clearGrid = () => {
+    if (gridWrapper.current !== null) {
+      let numberOfSquare: number =
+        (gridWrapper.current.offsetHeight * gridWrapper.current.offsetWidth) /
+        (squareHeight.current * squareWidth.current);
+      for (let i = 0; i < numberOfSquare; i++) {
+        let eachSquare = document.getElementById(i.toString());
+        if (eachSquare !== null) {
+          eachSquare.style.backgroundColor = gridColor.current;
+          eachSquare.style.borderColor = "blue";
+        }
+      }
+    }
+  };
+
   return (
     <div className="App">
-      <button onClick={Dijstra} className="startBtn">
-        start
-      </button>
-      <button onClick={genRandomObstacle} className="startBtn">
-        random
-      </button>
+      <NavBar
+        header="Dijstra's shortest Path"
+        startCb={() => Dijstra()}
+        randomCb={() => genRandomObstacle()}
+        clearCb={() => clearGrid()}
+      ></NavBar>
       <DrawGrid
         squareHeight={squareHeight.current}
         squareWidth={squareWidth.current}

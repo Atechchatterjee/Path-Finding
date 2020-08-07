@@ -41,9 +41,7 @@ const DrawGrid: FC<Props> = ({
   // main function to draw the grid
   function drawGrid(areaOfWrapper: number) {
     let gr = [];
-    let numberOfSquare: number =
-      areaOfWrapper /
-      ((squareHeight + borderHeight) * (squareWidth + borderWidth));
+    let numberOfSquare: number = areaOfWrapper / (squareHeight * squareWidth);
     for (let i = 0; i < numberOfSquare; i++) {
       gr.push(
         <div
@@ -54,7 +52,7 @@ const DrawGrid: FC<Props> = ({
             width: squareHeight,
             height: squareHeight,
             float: "left",
-            borderStyle: "dotted",
+            borderStyle: "solid",
             borderColor: "blue",
             borderWidth: borderWidth / 2,
           }}
@@ -136,24 +134,8 @@ const DrawGrid: FC<Props> = ({
     }
   }
 
-  function clearGrid() {
-    if (gridWrapper.current !== null) {
-      let numberOfSquare: number =
-        (gridWrapper.current.offsetHeight * gridWrapper.current.offsetWidth) /
-        ((squareHeight + borderHeight) * (squareWidth + borderWidth));
-      for (let i = 0; i < numberOfSquare; i++) {
-        let eachSquare = document.getElementById(i.toString());
-        if (eachSquare !== null) {
-          eachSquare.style.backgroundColor = gridColor.current;
-          eachSquare.style.borderColor = "blue";
-        }
-      }
-    }
-  }
-
   return (
     <div className="App">
-      <button onClick={clearGrid}>clear</button>
       <div
         className="gridWrapper"
         ref={gridWrapper}

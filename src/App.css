@@ -4,3 +4,23 @@ body {
 .sq:active {
   cursor: default !important;
 }
+
+.gridWrapper {
+  margin-top: 3% !important;
+  margin-left: 5% !important;
+}
+
+.navLink,
+.navHeader {
+  color: white !important;
+}
+
+.start-btn {
+  float: left;
+}
+.random-btn {
+  float: left;
+}
+.clear-btn {
+  /* float: left; */
+}
