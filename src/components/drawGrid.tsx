@@ -6,7 +6,7 @@ interface Props {
   gridWrapperWidth: number;
   gridWrapperHeight: number;
   borderWidth: number;
-  borderHeight: number;
+  clearedGrid: boolean;
   callback?: Function;
 }
 
@@ -16,20 +16,20 @@ const DrawGrid: FC<Props> = ({
   gridWrapperHeight,
   gridWrapperWidth,
   borderWidth,
-  borderHeight,
+  clearedGrid,
   callback,
 }) => {
   const [grid, updateGrid] = useState<any[]>([]);
 
   const gridWrapper = useRef<HTMLDivElement | null>(null);
 
-  const start = useRef<boolean>(false);
-  const end = useRef<boolean>(false);
-  const started = useRef<boolean>(false);
-  const ended = useRef<boolean>(false);
+  const Start = useRef<boolean>(false);
+  const End = useRef<boolean>(false);
+  const Started = useRef<boolean>(false);
+  const Ended = useRef<boolean>(false);
 
-  const start_node = useRef<number>(-1);
-  const end_node = useRef<number>(-1);
+  const Start_Node = useRef<number>(-1);
+  const End_Node = useRef<number>(-1);
 
   const mounted = useRef<number>(0);
 
@@ -39,7 +39,7 @@ const DrawGrid: FC<Props> = ({
   const gridColor = useRef<string>("#121415");
 
   // main function to draw the grid
-  function drawGrid(areaOfWrapper: number) {
+  let drawGrid = (areaOfWrapper: number) => {
     let gr = [];
     let numberOfSquare: number = areaOfWrapper / (squareHeight * squareWidth);
     for (let i = 0; i < numberOfSquare; i++) {
@@ -54,7 +54,7 @@ const DrawGrid: FC<Props> = ({
             float: "left",
             borderStyle: "solid",
             borderColor: "blue",
-            borderWidth: borderWidth / 2,
+            borderWidth: borderWidth,
           }}
           draggable="true"
           onDragEnter={highlightSquare}
@@ -63,12 +63,20 @@ const DrawGrid: FC<Props> = ({
       );
     }
     updateGrid(gr);
-  }
+  };
 
   useEffect(() => {
+    if (clearedGrid) {
+      Start.current = false;
+      End.current = false;
+      Started.current = false;
+      Ended.current = false;
+      Start_Node.current = -1;
+      End_Node.current = -1;
+    }
     document.addEventListener("keydown", function (event) {
-      if (!started.current) start.current = event.key === "s";
-      if (!ended.current) end.current = event.key === "e";
+      if (!Started.current) Start.current = event.key === "s";
+      if (!Ended.current) End.current = event.key === "e";
     });
 
     if (mounted.current <= 1) {
@@ -85,12 +93,12 @@ const DrawGrid: FC<Props> = ({
   });
 
   // marks the squares black on drag
-  function highlightSquare(event: any) {
+  let highlightSquare = (event: any) => {
     const id = event.target.id;
     const obs: number[] = [];
     const target = document.getElementById(id);
     if (target !== null) {
-      if (parseInt(id) === start_node.current) {
+      if (parseInt(id) === Start_Node.current) {
         if (target.style.backgroundColor === startNodeColor.current) {
           target.style.backgroundColor = gridColor.current;
         } else {
@@ -104,25 +112,25 @@ const DrawGrid: FC<Props> = ({
           callback({ startNode: -1, endNode: -1, obstacle: obs });
       }
     }
-  }
+  };
 
   // marks the start and the end node
-  function handleStartEnd(event: any) {
+  let handleStartEnd = (event: any) => {
     const id = event.target.id;
     const target = document.getElementById(id);
     if (target !== null) {
-      if (start.current && !started.current) {
+      if (Start.current && !Started.current) {
         target.style.backgroundColor = startNodeColor.current;
         target.style.borderColor = startNodeColor.current;
-        started.current = true;
-        start_node.current = parseInt(id);
+        Started.current = true;
+        Start_Node.current = parseInt(id);
         if (callback !== undefined)
           callback({ startNode: parseInt(id), endNode: -1, obs: [] });
-      } else if (end.current && !ended.current) {
+      } else if (End.current && !Ended.current) {
         target.style.backgroundColor = endNodeColor.current;
         target.style.borderColor = endNodeColor.current;
-        ended.current = true;
-        end_node.current = parseInt(id);
+        Ended.current = true;
+        End_Node.current = parseInt(id);
         if (callback !== undefined)
           callback({ endNode: parseInt(id), startNode: -1, obs: [] });
       } else {
@@ -132,7 +140,7 @@ const DrawGrid: FC<Props> = ({
           callback({ startNode: -1, endNode: -1, obstacle: [id] });
       }
     }
-  }
+  };
 
   return (
     <div className="App">

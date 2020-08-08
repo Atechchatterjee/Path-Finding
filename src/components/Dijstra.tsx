@@ -13,7 +13,7 @@ interface Props {
   insert: Function;
 }
 
-export default ({
+let Dijstra = ({
   start_node,
   end_node,
   numberOfSquares,
@@ -22,6 +22,8 @@ export default ({
   isObstacle,
   insert,
 }: Props) => {
+  let toBacktrack = true;
+
   if (start_node === -1 || end_node === -1) {
     alert("Not specified start or end");
     return;
@@ -61,7 +63,11 @@ export default ({
     let currentDistance: number = queue[0].distance;
 
     if (currentIndex === end_node) {
-      backTrack();
+      if (toBacktrack) {
+        console.log("backtracking");
+        backTrack();
+        toBacktrack = false;
+      }
       return;
     }
 
@@ -78,7 +84,9 @@ export default ({
     let loopAdjNodes = async (i: number): Promise<void> => {
       if (i === adjList.length)
         return new Promise((resolve, reject) => resolve());
+
       let adjIndex = adjList[i];
+
       if (adjIndex !== -1 && !visited[adjIndex] && !isObstacle(adjIndex)) {
         let element = document.getElementById(adjIndex.toString());
         let notStartEnd: boolean =
@@ -93,16 +101,18 @@ export default ({
         visited[adjIndex] = true;
         prevNodes.set(adjIndex, currentIndex);
       }
+
       loopAdjNodes(i + 1);
     };
 
-    loopAdjNodes(0).then(() => {
-      visited[currentIndex] = true;
-      queue.shift();
+    await loopAdjNodes(0);
+    visited[currentIndex] = true;
+    queue.shift();
 
-      setInterval(main, 500);
-    });
+    return setInterval(main, 500);
   };
 
   main();
 };
+
+export default Dijstra;

@@ -1,4 +1,4 @@
-import React, { FC, useRef } from "react";
+import React, { FC, useEffect, useRef, useState } from "react";
 import "./App.css";
 import Dijstra from "./components/Dijstra";
 import DrawGrid from "./components/drawGrid";
@@ -16,7 +16,6 @@ const App: FC = () => {
   const gridWrapperWidth = useRef<number>(1200);
   const gridWrapperHeight = useRef<number>(540);
   const borderWidth = useRef<number>(0.05);
-  const borderHeight = useRef<number>(0.05);
   const numberOfSquares = useRef<number>(
     (gridWrapperHeight.current * gridWrapperWidth.current) /
       (squareHeight.current * squareWidth.current)
@@ -29,6 +28,14 @@ const App: FC = () => {
 
   const start_node = useRef<number>(-1);
   const end_node = useRef<number>(-1);
+
+  const [clearedBoard, updateClearedBoard] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (clearedBoard) {
+      updateClearedBoard(false);
+    }
+  });
 
   // checks if the given index is valid
   let inBounds = (index: number): boolean => {
@@ -131,8 +138,15 @@ const App: FC = () => {
   };
 
   let clearGrid = () => {
-    let gridWrapper = document.querySelector("gridWrapper");
-    if (gridWrapper !== null) gridWrapper.parentNode?.removeChild(gridWrapper);
+    for (let i = 0; i < numberOfSquares.current; i++) {
+      let eachSquare = document.getElementById(i.toString());
+      if (eachSquare !== null) {
+        eachSquare.style.backgroundColor = gridColor.current;
+        eachSquare.style.borderColor = "blue";
+        updateClearedBoard(true);
+        obstacles.current = [];
+      }
+    }
   };
 
   return (
@@ -159,7 +173,7 @@ const App: FC = () => {
         gridWrapperHeight={gridWrapperHeight.current}
         gridWrapperWidth={gridWrapperWidth.current}
         borderWidth={borderWidth.current}
-        borderHeight={borderHeight.current}
+        clearedGrid={clearedBoard}
         callback={({ startNode, endNode, obstacle }: any) => {
           // getting the start and the end index
           if (startNode !== -1) {
