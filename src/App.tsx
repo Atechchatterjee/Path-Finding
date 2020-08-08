@@ -35,7 +35,7 @@ const App: FC = () => {
     if (clearedBoard) {
       updateClearedBoard(false);
     }
-  });
+  }, [clearedBoard]);
 
   // checks if the given index is valid
   let inBounds = (index: number): boolean => {
