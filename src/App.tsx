@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useRef, useState } from "react";
 import "./App.css";
+import Astar from "./components/Astar";
 import Dijstra from "./components/Dijstra";
 import DrawGrid from "./components/drawGrid";
 import NavBar from "./components/NavBar";
@@ -21,6 +22,9 @@ const App: FC = () => {
       (squareHeight.current * squareWidth.current)
   );
   const nRow = useRef<number>(gridWrapperWidth.current / squareWidth.current);
+  const nColumn = useRef<number>(
+    gridWrapperHeight.current / squareHeight.current
+  );
 
   const finalPathColor = useRef<string>("#F8C93B");
   const wallColor = useRef<string>("#C4C4C4");
@@ -153,17 +157,30 @@ const App: FC = () => {
     <div className="App">
       <NavBar
         header="Dijstra's shortest Path"
-        startCb={() =>
-          Dijstra({
-            start_node: start_node.current,
-            end_node: end_node.current,
-            numberOfSquares: numberOfSquares.current,
-            finalPathColor: finalPathColor.current,
-            getAdjacentNodes: getAdjacentNodes,
-            isObstacle: isObstacle,
-            insert: insert,
-          })
-        }
+        startCb={(algorithm: string) => {
+          if (algorithm === "Dijstra") {
+            Dijstra({
+              start_node: start_node.current,
+              end_node: end_node.current,
+              numberOfSquares: numberOfSquares.current,
+              finalPathColor: finalPathColor.current,
+              getAdjacentNodes: getAdjacentNodes,
+              isObstacle: isObstacle,
+              insert: insert,
+            });
+          } else if (algorithm === "A*") {
+            Astar({
+              start_node: start_node.current,
+              end_node: end_node.current,
+              numberOfSquares: numberOfSquares.current,
+              finalPathColor: finalPathColor.current,
+              getAdjacentNodes,
+              isObstacle,
+              nRow: nRow.current,
+              nColumn: nColumn.current,
+            });
+          } else if (algorithm.length === 0) alert("Choose an algorithm");
+        }}
         randomCb={() => genRandomObstacle()}
         clearCb={() => clearGrid()}
       ></NavBar>
