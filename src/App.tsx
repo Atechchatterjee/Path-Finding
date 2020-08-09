@@ -156,7 +156,7 @@ const App: FC = () => {
   return (
     <div className="App">
       <NavBar
-        header="Dijstra's shortest Path"
+        header="Path Finding Algorithm"
         startCb={(algorithm: string) => {
           if (algorithm === "Dijstra") {
             Dijstra({

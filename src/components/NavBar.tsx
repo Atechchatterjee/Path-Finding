@@ -35,7 +35,7 @@ export default ({ header, startCb, randomCb, clearCb }: Props) => {
               if (randomCb) randomCb();
             }}
           >
-            Random
+            Generate Walls
           </Nav.Link>
           <Nav.Link
             className="navLink"

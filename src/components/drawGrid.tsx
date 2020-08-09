@@ -153,7 +153,7 @@ const DrawGrid: FC<Props> = ({
     mounted.current++;
   });
 
-  // drawing walls on drag and dragging the start and end node
+  // (drag) drawing walls on drag and dragging the start and end node
   let highlightSquare = (event: any) => {
     mouseLeftId.current = event.target.id;
     const id = event.target.id;
@@ -188,7 +188,7 @@ const DrawGrid: FC<Props> = ({
     }
   };
 
-  // marks the start and the end node
+  //(click) marks the start and the end node
   let handleStartEnd = (event: any) => {
     const id = event.target.id;
     const target = document.getElementById(id);
@@ -205,7 +205,10 @@ const DrawGrid: FC<Props> = ({
         End_Node.current = parseInt(id);
         if (callback !== undefined)
           callback({ endNode: parseInt(id), startNode: -1, obs: [] });
-      } else {
+      } else if (
+        parseInt(id) !== Start_Node.current &&
+        parseInt(id) !== End_Node.current
+      ) {
         target.style.backgroundColor = wallColor.current;
         if (callback !== undefined)
           callback({ startNode: -1, endNode: -1, obstacle: [id] });
