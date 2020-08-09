@@ -8,6 +8,7 @@ interface Props {
   borderWidth: number;
   clearedGrid: boolean;
   callback?: Function;
+  removeObstacle?: Function;
 }
 
 const DrawGrid: FC<Props> = ({
@@ -18,6 +19,7 @@ const DrawGrid: FC<Props> = ({
   borderWidth,
   clearedGrid,
   callback,
+  removeObstacle,
 }) => {
   const [grid, updateGrid] = useState<any[]>([]);
   const startDrag = useRef<boolean>(false);
@@ -41,6 +43,7 @@ const DrawGrid: FC<Props> = ({
   const gridColor = useRef<string>("#121415");
   const mouseLeftId = useRef<string>("");
   const dragEnded = useRef<boolean>(false);
+  const shiftPressed = useRef<boolean>(false);
 
   // main function to draw the grid
   let drawGrid = (areaOfWrapper: number) => {
@@ -77,17 +80,14 @@ const DrawGrid: FC<Props> = ({
                 element.style.backgroundColor = gridColor.current;
             }
           }}
-          onDragEnd={(event: any) => {
+          onDragEnd={() => {
             dragEnded.current = true;
-            console.log(`dragEnded ${dragEnded.current}`);
             if (startDrag.current) {
               let element = document.getElementById(mouseLeftId.current);
 
               if (element !== null)
                 element.style.backgroundColor = startNodeColor.current;
-
               Start_Node.current = parseInt(mouseLeftId.current);
-
               if (callback)
                 callback({
                   startNode: parseInt(mouseLeftId.current),
@@ -129,9 +129,15 @@ const DrawGrid: FC<Props> = ({
       Start_Node.current = -1;
       End_Node.current = -1;
     }
+    // marks the start and the end nodes
     document.addEventListener("keydown", function (event) {
       if (!Started.current) Start.current = event.key === "s";
       if (!Ended.current) End.current = event.key === "e";
+      if (event.key === "Shift") shiftPressed.current = true;
+    });
+
+    document.addEventListener("keyup", function (event) {
+      if (event.key === "Shift") shiftPressed.current = false;
     });
 
     if (mounted.current <= 1) {
@@ -147,11 +153,11 @@ const DrawGrid: FC<Props> = ({
     mounted.current++;
   });
 
-  // drawing walls on drag
+  // drawing walls on drag and dragging the start and end node
   let highlightSquare = (event: any) => {
     mouseLeftId.current = event.target.id;
     const id = event.target.id;
-    const obs: number[] = [];
+    const obs: number[] = []; // obstacles
     const target = document.getElementById(id);
     if (target !== null) {
       obs.push(parseInt(id));
@@ -164,10 +170,20 @@ const DrawGrid: FC<Props> = ({
         target.style.backgroundColor = endNodeColor.current;
         target.style.backgroundColor = gridColor.current;
         dragEnded.current = false;
-      } else if (!startDrag.current && !endDrag.current) {
-        target.style.backgroundColor = wallColor.current;
-        if (callback !== undefined)
-          callback({ startNode: -1, endNode: -1, obstacle: obs });
+      } else if (
+        !startDrag.current &&
+        !endDrag.current &&
+        parseInt(id) !== Start_Node.current &&
+        parseInt(id) !== End_Node.current
+      ) {
+        if (!shiftPressed.current) {
+          target.style.backgroundColor = wallColor.current;
+          if (callback !== undefined)
+            callback({ startNode: -1, endNode: -1, obstacle: obs });
+        } else {
+          target.style.backgroundColor = gridColor.current;
+          if (removeObstacle !== undefined) removeObstacle(parseInt(id));
+        }
       }
     }
   };

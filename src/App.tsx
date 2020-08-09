@@ -203,6 +203,13 @@ const App: FC = () => {
             obstacles.current.push(obstacle);
           }
         }}
+        removeObstacle={(id: number) => {
+          let index: number = -1;
+          obstacles.current.forEach((obs: number, i: number) => {
+            if (Number(obs) === id) index = i;
+          });
+          if (index !== -1) obstacles.current.splice(index, 1);
+        }}
       />
     </div>
   );
