@@ -129,6 +129,7 @@ const DrawGrid: FC<Props> = ({
       Start_Node.current = -1;
       End_Node.current = -1;
     }
+
     // marks the start and the end nodes
     document.addEventListener("keydown", function (event) {
       if (!Started.current) Start.current = event.key === "s";

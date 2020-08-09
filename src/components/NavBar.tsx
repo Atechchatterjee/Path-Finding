@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { FC, useState } from "react";
+import Form from "react-bootstrap/Form";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
@@ -10,13 +11,29 @@ interface Props {
   clearCb?: Function;
   startCb?: Function;
   cleanCb?: Function;
+  speedCb?: Function;
+  defaultSpeed: number;
 }
 
-export default ({ header, startCb, randomCb, clearCb, cleanCb }: Props) => {
+let NavBar: FC<Props> = ({
+  header,
+  startCb,
+  randomCb,
+  clearCb,
+  cleanCb,
+  speedCb,
+  defaultSpeed,
+}) => {
   let [algorithm, changeAlgorithm] = useState<string>("");
+  let [changedSpeed, updateChangedSpeed] = useState<string>("");
   return (
     <Navbar bg="dark" expand="lg">
-      <Navbar.Brand className="navHeader">{header}</Navbar.Brand>
+      <Navbar.Brand
+        className="navHeader"
+        onClick={() => window.location.assign("/")}
+      >
+        {header}
+      </Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
         <Nav className="mr-auto">
@@ -54,6 +71,17 @@ export default ({ header, startCb, randomCb, clearCb, cleanCb }: Props) => {
           >
             Clean
           </Nav.Link>
+          <Nav.Link className="Label">Speed : </Nav.Link>
+          <Form.Control
+            type="number"
+            value={changedSpeed.length === 0 ? defaultSpeed : changedSpeed}
+            className="numberInput"
+            id="speedInput"
+            onChange={(event: any) => {
+              updateChangedSpeed(event.target.value);
+              if (speedCb) speedCb(event.target.value);
+            }}
+          />
         </Nav>
         <NavDropdown
           title={algorithm.length !== 0 ? algorithm : "Algoritm"}
@@ -78,3 +106,5 @@ export default ({ header, startCb, randomCb, clearCb, cleanCb }: Props) => {
     </Navbar>
   );
 };
+
+export default NavBar;

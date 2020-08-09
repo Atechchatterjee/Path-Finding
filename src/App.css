@@ -10,14 +10,19 @@ body {
   margin-left: 5% !important;
 }
 
-.navLink,
+.navLink {
+  color: white !important;
+}
 .navHeader {
   color: white !important;
+  cursor: pointer;
+}
+.navHeader:hover {
+  color: #c2c2c2 !important;
 }
 
 .navLink:hover {
-  /* background-color: #272c30; */
-  color: #9ab1c5 !important;
+  color: #c59a9a !important;
   opacity: 0.9;
 }
 
@@ -27,6 +32,15 @@ body {
 .random-btn {
   float: left;
 }
-.clear-btn {
-  /* float: left; */
+.numberInput {
+  width: 15% !important;
+  height: 10% !important;
+}
+#speedInput {
+  margin-left: 2%;
+  margin-top: 0.7%;
+}
+.Label {
+  cursor: default;
+  color: white !important;
 }

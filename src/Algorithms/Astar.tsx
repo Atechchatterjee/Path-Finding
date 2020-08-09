@@ -1,6 +1,12 @@
+interface Coordinates {
+  x: number;
+  y: number;
+}
+
 interface q {
   index: number;
-  distance: number;
+  h_cost: number;
+  g_cost: number;
 }
 
 interface Props {
@@ -10,19 +16,55 @@ interface Props {
   finalPathColor: string;
   getAdjacentNodes: Function;
   isObstacle: Function;
-  insert: Function;
+  nRow: number;
+  speed: number;
 }
 
-let Dijstra = ({
+let Astar = ({
   start_node,
   end_node,
   numberOfSquares,
   finalPathColor,
   getAdjacentNodes,
   isObstacle,
-  insert,
+  nRow,
+  speed,
 }: Props) => {
   let toBacktrack = true;
+
+  let getCoordinates = (index: number): Coordinates => {
+    let x = index % nRow;
+    let y = Math.floor(index / nRow);
+    return { x, y };
+  };
+
+  let calculateHCost = (index: number): number => {
+    let end: Coordinates = getCoordinates(end_node);
+    let current: Coordinates = getCoordinates(index);
+    return Math.sqrt(
+      Math.pow(end.x - current.x, 2) + Math.pow(end.y - current.y, 2)
+    );
+  };
+
+  // inserts elements such that the sorted order is maintained (sorted by distance)
+  let insert = (queue: q[], { index, g_cost, h_cost }: q) => {
+    if (queue.length === 0) {
+      queue.push({ index, h_cost, g_cost });
+      return queue;
+    }
+
+    let added: boolean = false;
+    for (let i = 0; i < queue.length; i++) {
+      if (h_cost < queue[i].h_cost) {
+        added = true;
+        queue.splice(i, 0, { index, h_cost, g_cost });
+        break;
+      }
+    }
+    if (!added) queue.push({ index, h_cost, g_cost });
+
+    return queue;
+  };
 
   if (start_node === -1 || end_node === -1) {
     alert("Not specified start or end");
@@ -34,9 +76,13 @@ let Dijstra = ({
   let queue: q[] = [];
   let visited: boolean[] = [];
 
-  queue = insert(queue, { index: start_node, distance: 0 });
-
   for (let i = 0; i < numberOfSquares; i++) visited.push(false);
+
+  queue = insert(queue, {
+    index: start_node,
+    h_cost: calculateHCost(start_node),
+    g_cost: 0,
+  });
 
   // back-tracking from the end node
   let backTrack = (
@@ -55,26 +101,24 @@ let Dijstra = ({
   };
 
   let main = async () => {
-    if (queue[0] === undefined) {
-      return;
-    }
+    if (queue[0] === undefined) return;
 
-    let currentIndex: number = queue[0].index;
-    let currentDistance: number = queue[0].distance;
+    let currentIndex = queue[0].index;
+    let gCost = queue[0].g_cost;
+
+    queue.shift();
+
+    if (currentIndex === undefined) return;
+
+    adjList = getAdjacentNodes(currentIndex);
 
     if (currentIndex === end_node) {
       if (toBacktrack) {
-        console.log("backtracking");
         backTrack();
         toBacktrack = false;
       }
       return;
     }
-
-    // getting the adjacent elements of current node
-    adjList = getAdjacentNodes(currentIndex);
-
-    if (currentIndex === undefined) return;
 
     let element = document.getElementById(currentIndex.toString());
     if (element !== null && currentIndex !== start_node) {
@@ -97,8 +141,10 @@ let Dijstra = ({
         }
         queue = insert(queue, {
           index: adjIndex,
-          distance: currentDistance + 1,
+          g_cost: gCost + 1,
+          h_cost: gCost + calculateHCost(adjIndex),
         });
+
         visited[adjIndex] = true;
         prevNodes.set(adjIndex, currentIndex);
       }
@@ -108,12 +154,10 @@ let Dijstra = ({
 
     await loopAdjNodes(0);
     visited[currentIndex] = true;
-    queue.shift();
-
-    return setTimeout(main, 50);
+    return setTimeout(main, speed);
   };
 
   main();
 };
 
-export default Dijstra;
+export default Astar;

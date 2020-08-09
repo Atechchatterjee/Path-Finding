@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useRef, useState } from "react";
+import Astar from "./Algorithms/Astar";
+import Dijstra from "./Algorithms/Dijstra";
 import "./App.css";
-import Astar from "./components/Astar";
-import Dijstra from "./components/Dijstra";
 import DrawGrid from "./components/drawGrid";
 import NavBar from "./components/NavBar";
 
@@ -11,6 +11,8 @@ interface q {
 }
 
 const App: FC = () => {
+  const [speed, updateSpeed] = useState<number>(30);
+
   const obstacles = useRef<number[]>([]);
   const squareWidth = useRef<number>(20);
   const squareHeight = useRef<number>(20);
@@ -22,9 +24,6 @@ const App: FC = () => {
       (squareHeight.current * squareWidth.current)
   );
   const nRow = useRef<number>(gridWrapperWidth.current / squareWidth.current);
-  const nColumn = useRef<number>(
-    gridWrapperHeight.current / squareHeight.current
-  );
 
   const finalPathColor = useRef<string>("#F8C93B");
   const wallColor = useRef<string>("#C4C4C4");
@@ -179,6 +178,7 @@ const App: FC = () => {
               getAdjacentNodes: getAdjacentNodes,
               isObstacle: isObstacle,
               insert: insert,
+              speed: speed,
             });
           } else if (algorithm === "A*") {
             Astar({
@@ -189,13 +189,17 @@ const App: FC = () => {
               getAdjacentNodes,
               isObstacle,
               nRow: nRow.current,
-              nColumn: nColumn.current,
+              speed: speed,
             });
           } else if (algorithm.length === 0) alert("Choose an algorithm");
         }}
         randomCb={() => genRandomObstacle()}
         clearCb={() => clearGrid()}
         cleanCb={() => clean()}
+        speedCb={(changedSpeed: string) => {
+          updateSpeed(parseInt(changedSpeed));
+        }}
+        defaultSpeed={speed}
       ></NavBar>
       <DrawGrid
         squareHeight={squareHeight.current}
