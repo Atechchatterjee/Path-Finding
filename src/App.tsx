@@ -153,6 +153,18 @@ const App: FC = () => {
     }
   };
 
+  let clean = () => {
+    for (let i = 0; i < numberOfSquares.current; i++) {
+      let eachSquare = document.getElementById(i.toString());
+      if (eachSquare) {
+        if (eachSquare.classList.contains("searched")) {
+          eachSquare.style.backgroundColor = gridColor.current;
+          eachSquare.classList.remove("searched");
+        }
+      }
+    }
+  };
+
   return (
     <div className="App">
       <NavBar
@@ -183,6 +195,7 @@ const App: FC = () => {
         }}
         randomCb={() => genRandomObstacle()}
         clearCb={() => clearGrid()}
+        cleanCb={() => clean()}
       ></NavBar>
       <DrawGrid
         squareHeight={squareHeight.current}

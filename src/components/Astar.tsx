@@ -137,6 +137,7 @@ let Astar = ({
           adjIndex !== start_node && adjIndex !== end_node;
         if (element !== null && notStartEnd) {
           element.style.backgroundColor = "blue";
+          element.classList.add("searched");
         }
         queue = insert(queue, {
           index: adjIndex,

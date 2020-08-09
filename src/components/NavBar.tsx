@@ -9,9 +9,10 @@ interface Props {
   randomCb?: Function;
   clearCb?: Function;
   startCb?: Function;
+  cleanCb?: Function;
 }
 
-export default ({ header, startCb, randomCb, clearCb }: Props) => {
+export default ({ header, startCb, randomCb, clearCb, cleanCb }: Props) => {
   let [algorithm, changeAlgorithm] = useState<string>("");
   return (
     <Navbar bg="dark" expand="lg">
@@ -44,6 +45,14 @@ export default ({ header, startCb, randomCb, clearCb }: Props) => {
             }}
           >
             Clear Board
+          </Nav.Link>
+          <Nav.Link
+            className="navLink"
+            onClick={() => {
+              if (cleanCb) cleanCb();
+            }}
+          >
+            Clean
           </Nav.Link>
         </Nav>
         <NavDropdown
