@@ -31,7 +31,6 @@ let Astar = ({
   nColumn,
 }: Props) => {
   let toBacktrack = true;
-  let ended = false;
 
   let getCoordinates = (index: number): Coordinates => {
     let x = index % nRow;
@@ -102,62 +101,59 @@ let Astar = ({
   };
 
   let main = async () => {
-    if (!ended) {
-      if (queue[0] === undefined) return;
+    if (queue[0] === undefined) return;
 
-      let currentIndex = queue[0].index;
-      let gCost = queue[0].g_cost;
+    let currentIndex = queue[0].index;
+    let gCost = queue[0].g_cost;
 
-      queue.shift();
+    queue.shift();
 
-      if (currentIndex === undefined) return;
+    if (currentIndex === undefined) return;
 
-      adjList = getAdjacentNodes(currentIndex);
+    adjList = getAdjacentNodes(currentIndex);
 
-      if (currentIndex === end_node) {
-        if (toBacktrack) {
-          backTrack();
-          toBacktrack = false;
-        }
-        ended = true;
-        return;
+    if (currentIndex === end_node) {
+      if (toBacktrack) {
+        backTrack();
+        toBacktrack = false;
       }
-
-      let element = document.getElementById(currentIndex.toString());
-      if (element !== null && currentIndex !== start_node) {
-        element.style.backgroundColor = "#26AEC9";
-      }
-
-      let loopAdjNodes = async (i: number): Promise<void> => {
-        if (i === adjList.length)
-          return new Promise((resolve, reject) => resolve());
-
-        let adjIndex = adjList[i];
-
-        if (adjIndex !== -1 && !visited[adjIndex] && !isObstacle(adjIndex)) {
-          let element = document.getElementById(adjIndex.toString());
-          let notStartEnd: boolean =
-            adjIndex !== start_node && adjIndex !== end_node;
-          if (element !== null && notStartEnd) {
-            element.style.backgroundColor = "blue";
-          }
-          queue = insert(queue, {
-            index: adjIndex,
-            g_cost: gCost + 1,
-            h_cost: gCost + calculateHCost(adjIndex),
-          });
-
-          visited[adjIndex] = true;
-          prevNodes.set(adjIndex, currentIndex);
-        }
-
-        loopAdjNodes(i + 1);
-      };
-
-      await loopAdjNodes(0);
-      visited[currentIndex] = true;
-      return setInterval(main, 500);
+      return;
     }
+
+    let element = document.getElementById(currentIndex.toString());
+    if (element !== null && currentIndex !== start_node) {
+      element.style.backgroundColor = "#26AEC9";
+    }
+
+    let loopAdjNodes = async (i: number): Promise<void> => {
+      if (i === adjList.length)
+        return new Promise((resolve, reject) => resolve());
+
+      let adjIndex = adjList[i];
+
+      if (adjIndex !== -1 && !visited[adjIndex] && !isObstacle(adjIndex)) {
+        let element = document.getElementById(adjIndex.toString());
+        let notStartEnd: boolean =
+          adjIndex !== start_node && adjIndex !== end_node;
+        if (element !== null && notStartEnd) {
+          element.style.backgroundColor = "blue";
+        }
+        queue = insert(queue, {
+          index: adjIndex,
+          g_cost: gCost + 1,
+          h_cost: gCost + calculateHCost(adjIndex),
+        });
+
+        visited[adjIndex] = true;
+        prevNodes.set(adjIndex, currentIndex);
+      }
+
+      loopAdjNodes(i + 1);
+    };
+
+    await loopAdjNodes(0);
+    visited[currentIndex] = true;
+    return setTimeout(main, 50);
   };
 
   main();

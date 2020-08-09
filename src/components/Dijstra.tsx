@@ -109,7 +109,7 @@ let Dijstra = ({
     visited[currentIndex] = true;
     queue.shift();
 
-    return setInterval(main, 500);
+    return setTimeout(main, 50);
   };
 
   main();

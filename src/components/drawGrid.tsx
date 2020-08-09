@@ -20,6 +20,8 @@ const DrawGrid: FC<Props> = ({
   callback,
 }) => {
   const [grid, updateGrid] = useState<any[]>([]);
+  const startDrag = useRef<boolean>(false);
+  const endDrag = useRef<boolean>(false);
 
   const gridWrapper = useRef<HTMLDivElement | null>(null);
 
@@ -37,6 +39,8 @@ const DrawGrid: FC<Props> = ({
   const endNodeColor = useRef<string>("#43BA48");
   const wallColor = useRef<string>("#C4C4C4");
   const gridColor = useRef<string>("#121415");
+  const mouseLeftId = useRef<string>("");
+  const dragEnded = useRef<boolean>(false);
 
   // main function to draw the grid
   let drawGrid = (areaOfWrapper: number) => {
@@ -59,6 +63,57 @@ const DrawGrid: FC<Props> = ({
           draggable="true"
           onDragEnter={highlightSquare}
           onClick={handleStartEnd}
+          onDragStart={(event: any) => {
+            let id: number = parseInt(event.target.id);
+            if (id === Start_Node.current) {
+              startDrag.current = true;
+              let element = document.getElementById(id.toString());
+              if (element !== null)
+                element.style.backgroundColor = gridColor.current;
+            } else if (id === End_Node.current) {
+              endDrag.current = true;
+              let element = document.getElementById(id.toString());
+              if (element !== null)
+                element.style.backgroundColor = gridColor.current;
+            }
+          }}
+          onDragEnd={(event: any) => {
+            dragEnded.current = true;
+            console.log(`dragEnded ${dragEnded.current}`);
+            if (startDrag.current) {
+              let element = document.getElementById(mouseLeftId.current);
+
+              if (element !== null)
+                element.style.backgroundColor = startNodeColor.current;
+
+              Start_Node.current = parseInt(mouseLeftId.current);
+
+              if (callback)
+                callback({
+                  startNode: parseInt(mouseLeftId.current),
+                  endNode: -1,
+                  obs: [],
+                });
+
+              startDrag.current = false;
+            } else if (endDrag.current) {
+              let element = document.getElementById(mouseLeftId.current);
+
+              if (element !== null)
+                element.style.backgroundColor = endNodeColor.current;
+
+              End_Node.current = parseInt(mouseLeftId.current);
+
+              if (callback)
+                callback({
+                  startNode: -1,
+                  endNode: parseInt(mouseLeftId.current),
+                  obs: [],
+                });
+
+              endDrag.current = false;
+            }
+          }}
         ></div>
       );
     }
@@ -92,22 +147,25 @@ const DrawGrid: FC<Props> = ({
     mounted.current++;
   });
 
-  // marks the squares black on drag
+  // drawing walls on drag
   let highlightSquare = (event: any) => {
+    mouseLeftId.current = event.target.id;
     const id = event.target.id;
     const obs: number[] = [];
     const target = document.getElementById(id);
     if (target !== null) {
-      if (parseInt(id) === Start_Node.current) {
-        if (target.style.backgroundColor === startNodeColor.current) {
-          target.style.backgroundColor = gridColor.current;
-        } else {
-          target.style.backgroundColor = startNodeColor.current;
-        }
-      } else {
-        obs.push(parseInt(id));
+      obs.push(parseInt(id));
+
+      if (startDrag.current && !dragEnded.current) {
+        target.style.backgroundColor = startNodeColor.current;
+        target.style.backgroundColor = gridColor.current;
+        dragEnded.current = false;
+      } else if (endDrag.current && !dragEnded.current) {
+        target.style.backgroundColor = endNodeColor.current;
+        target.style.backgroundColor = gridColor.current;
+        dragEnded.current = false;
+      } else if (!startDrag.current && !endDrag.current) {
         target.style.backgroundColor = wallColor.current;
-        target.style.borderColor = gridColor.current;
         if (callback !== undefined)
           callback({ startNode: -1, endNode: -1, obstacle: obs });
       }
@@ -121,21 +179,18 @@ const DrawGrid: FC<Props> = ({
     if (target !== null) {
       if (Start.current && !Started.current) {
         target.style.backgroundColor = startNodeColor.current;
-        target.style.borderColor = startNodeColor.current;
         Started.current = true;
         Start_Node.current = parseInt(id);
         if (callback !== undefined)
           callback({ startNode: parseInt(id), endNode: -1, obs: [] });
       } else if (End.current && !Ended.current) {
         target.style.backgroundColor = endNodeColor.current;
-        target.style.borderColor = endNodeColor.current;
         Ended.current = true;
         End_Node.current = parseInt(id);
         if (callback !== undefined)
           callback({ endNode: parseInt(id), startNode: -1, obs: [] });
       } else {
         target.style.backgroundColor = wallColor.current;
-        target.style.borderColor = gridColor.current;
         if (callback !== undefined)
           callback({ startNode: -1, endNode: -1, obstacle: [id] });
       }
